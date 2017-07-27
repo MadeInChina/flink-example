@@ -25,17 +25,18 @@ import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer010;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer011;
 import org.apache.flink.streaming.util.serialization.TypeInformationSerializationSchema;
 
 import java.util.Properties;
 
-public class FlinkKafkaProducer {
+public class WriteToKafka011 {
 
 	public static void main(String[] args) throws Exception {
 
-		if(args.length != 5){
-			System.out.println("usage: topic num_elements parallelism restartAttempts restartDelayMs");
-			return;
+		if(args.length != 7){
+			System.out.println("usage: topic num_elements parallelism restartAttempts restartDelayMs checkpointingInterval sleep");
+			System.exit(1);
 		}
 
 		final String topic = args[0].toString();
@@ -43,11 +44,13 @@ public class FlinkKafkaProducer {
 		final int parallelism = Integer.valueOf(args[2]);
 		final int restartAttempts = Integer.valueOf(args[3]);
 		final long restartDelayMs = Long.valueOf(args[4]);
+        final int checkpointingInterval = Integer.valueOf(args[5]);
+        final int sleep = Integer.valueOf(args[6]);
 
 		TypeInformationSerializationSchema<String> schema = new TypeInformationSerializationSchema<>(BasicTypeInfo.STRING_TYPE_INFO, new ExecutionConfig());
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.enableCheckpointing(500);
+		env.enableCheckpointing(checkpointingInterval);
 		env.setParallelism(parallelism);
 		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(restartAttempts, Time.milliseconds(restartDelayMs)));
 //		env.setRestartStrategy(RestartStrategies.noRestart());
@@ -60,14 +63,12 @@ public class FlinkKafkaProducer {
 		properties.setProperty("timeout.ms", "10000");
 		properties.setProperty("max.block.ms", "10000");
 		// increase batch.size and linger.ms - this tells KafkaProducer to batch produced events instead of flushing them immediately
-		properties.setProperty("batch.size", "10240000");
-		properties.setProperty("linger.ms", "10000");
+		properties.setProperty("linger.ms", "0");
 
-		FlinkKafkaProducer010<String> producer = new FlinkKafkaProducer010<>(topic, schema, properties);
-		producer.setFlushOnCheckpoint(true);
+		FlinkKafkaProducer011<String> producer = new FlinkKafkaProducer011<>(topic, schema, properties);
 		// process exactly failAfterElements number of elements and then shutdown Kafka broker and fail application
 		env
-				.addSource(new IntegerSource(numElements, 1))
+				.addSource(new IntegerSource(numElements, sleep))
 				.map(new MapFunction<Integer, String>() {
 					@Override
 					public String map(Integer integer) throws Exception {

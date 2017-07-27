@@ -48,6 +48,8 @@ public class IntegerSource
      */
     private final int numEventsTotal;
 
+    private final int sleep;
+
     /**
      * The current position in the sequence of numbers.
      */
@@ -61,8 +63,9 @@ public class IntegerSource
 
     private volatile boolean running = true;
 
-    public IntegerSource(int numEventsTotal) {
+    public IntegerSource(int numEventsTotal, int sleep) {
         this.numEventsTotal = numEventsTotal;
+        this.sleep = sleep;
     }
 
     @Override
@@ -79,7 +82,10 @@ public class IntegerSource
                 current += stepSize;
                 this.currentPosition = current;
             }
-            Thread.sleep(1);
+
+            if (sleep > 0) {
+                Thread.sleep(sleep);
+            }
         }
 
         // after we are done, we need to wait for two more checkpoint to complete
