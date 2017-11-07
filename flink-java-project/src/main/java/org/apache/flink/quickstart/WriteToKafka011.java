@@ -65,7 +65,8 @@ public class WriteToKafka011 {
 		// increase batch.size and linger.ms - this tells KafkaProducer to batch produced events instead of flushing them immediately
 		properties.setProperty("linger.ms", "0");
 
-		FlinkKafkaProducer011<String> producer = new FlinkKafkaProducer011<>(topic, schema, properties);
+//		FlinkKafkaProducer011<String> producer = new FlinkKafkaProducer011<>(topic, schema, properties);
+		FlinkKafkaProducer010<String> producer = new FlinkKafkaProducer010<>(topic, schema, properties);
 		// process exactly failAfterElements number of elements and then shutdown Kafka broker and fail application
 		env
 				.addSource(new IntegerSource(numElements, sleep))
