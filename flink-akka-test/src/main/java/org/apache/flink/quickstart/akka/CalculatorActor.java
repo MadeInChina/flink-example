@@ -1,11 +1,11 @@
 package org.apache.flink.quickstart.akka;
 
 import akka.actor.AbstractActor;
+import akka.japi.pf.ReceiveBuilder;
 
 public class CalculatorActor extends AbstractActor {
-  @Override
-  public Receive createReceive() {
-    return receiveBuilder()
+  public CalculatorActor() {
+    receive(ReceiveBuilder
       .match(Op.Add.class, add -> {
         System.out.println("Calculating " + add.getN1() + " + " + add.getN2());
         Op.AddResult result = new Op.AddResult(add.getN1(), add.getN2(),
@@ -34,6 +34,6 @@ public class CalculatorActor extends AbstractActor {
           divide.getN2(), divide.getN1() / divide.getN2());
         sender().tell(result, self());
       })
-      .build();
+      .build());
   }
 }
